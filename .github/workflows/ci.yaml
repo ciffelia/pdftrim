@@ -15,7 +15,13 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  build-linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - x86_64-unknown-linux-gnu
+          - x86_64-unknown-linux-musl
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -23,18 +29,115 @@ jobs:
       - name: Setup Rust
         run: |
           rustup set profile minimal
-          rustup toolchain install "$RUST_TOOLCHAIN"
+          rustup toolchain install "$RUST_TOOLCHAIN" --target ${{ matrix.target }}
           rustup override set "$RUST_TOOLCHAIN"
 
       - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
 
       - name: cargo build
-        run: cargo build --all-targets --release
+        run: cargo build --all-targets --release --target ${{ matrix.target }}
 
       - uses: actions/upload-artifact@v4
         with:
-          name: pdftrim
-          path: target/release/pdftrim
+          name: pdftrim-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/pdftrim
+          if-no-files-found: error
+
+  build-linux-cross:
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - aarch64-unknown-linux-gnu
+          - aarch64-unknown-linux-musl
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        run: |
+          rustup set profile minimal
+          rustup toolchain install "$RUST_TOOLCHAIN" --target ${{ matrix.target }}
+          rustup override set "$RUST_TOOLCHAIN"
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+
+      - uses: cargo-bins/cargo-binstall@main
+
+      - name: Install cross
+        # Set --force to work around https://github.com/Swatinem/rust-cache/issues/204
+        run: cargo binstall --force cross
+
+      - name: cross build
+        run: cross build --all-targets --release --target ${{ matrix.target }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pdftrim-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/pdftrim
+          if-no-files-found: error
+
+  build-macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - aarch64-apple-darwin
+          - x86_64-apple-darwin
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        run: |
+          rustup set profile minimal
+          rustup toolchain install "$RUST_TOOLCHAIN" --target ${{ matrix.target }}
+          rustup override set "$RUST_TOOLCHAIN"
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+
+      - name: cargo build
+        run: cargo build --all-targets --release --target ${{ matrix.target }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pdftrim-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/pdftrim
+          if-no-files-found: error
+
+  build-windows:
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - x86_64-pc-windows-msvc
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        run: |
+          rustup set profile minimal
+          rustup toolchain install "$env:RUST_TOOLCHAIN" --target ${{ matrix.target }}
+          rustup override set "$env:RUST_TOOLCHAIN"
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+
+      - name: cargo build
+        run: cargo build --all-targets --release --target ${{ matrix.target }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pdftrim-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/pdftrim.exe
           if-no-files-found: error
 
   rustfmt:
