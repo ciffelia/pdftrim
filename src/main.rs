@@ -50,11 +50,30 @@ fn main() {
     );
 }
 
+/// Removes white margins from PDF files.
+///
+/// This tool uses Ghostscript to calculate the bounding boxes for each page in
+/// the input PDF file. It then generates an output PDF file with updated
+/// CropBox values to remove white margins.
+///
+/// While similar to the pdfcrop script in the TeX Live distribution, this tool
+/// offers a key advantage: it maintains minimal output file sizes. The
+/// traditional pdfcrop processes PDFs by importing them into TeX documents and
+/// converting them back to PDF using pdfTeX, XeTeX, or LuaTeX, which often
+/// results in significantly larger files. In contrast, this tool directly
+/// modifies the PDF dimension data, avoiding file size inflation.
 #[derive(clap::Parser)]
 struct Args {
+    /// The input PDF file to crop.
+    ///
+    /// The `.pdf` extension is optional.
     #[arg(value_name = "input[.pdf]")]
     input: String,
 
+    /// The output PDF file to write.
+    ///
+    /// If not specified, the input file name is used with `-crop.pdf` appended.
+    /// Existing files will be overwritten.
     #[arg(value_name = "output file")]
     output: Option<String>,
 }
