@@ -123,8 +123,8 @@ jobs:
       - name: Setup Rust
         run: |
           rustup set profile minimal
-          rustup toolchain install "$RUST_TOOLCHAIN" --target ${{ matrix.target }}
-          rustup override set "$RUST_TOOLCHAIN"
+          rustup toolchain install "$env:RUST_TOOLCHAIN" --target ${{ matrix.target }}
+          rustup override set "$env:RUST_TOOLCHAIN"
 
       - uses: Swatinem/rust-cache@v2
         with:
