@@ -13,7 +13,7 @@ fn main() {
 
     let args = Args::parse();
 
-    let gs_cmd = find_ghostscript();
+    let gs_cmd = args.gscmd.as_deref().unwrap_or_else(|| find_ghostscript());
     debug!("Using Ghostscript command: {}", gs_cmd);
 
     let input_path = if std::fs::metadata(&args.input).is_ok() {
@@ -83,6 +83,12 @@ struct Args {
     /// Existing files will be overwritten.
     #[arg(value_name = "output file")]
     output: Option<String>,
+
+    /// The Ghostscript command to use.
+    ///
+    /// If not specified, the tool will search for Ghostscript in the system.
+    #[arg(long, value_name = "command")]
+    gscmd: Option<String>,
 }
 
 fn find_ghostscript() -> &'static str {

@@ -13,7 +13,7 @@ While similar to the pdfcrop script in the TeX Live distribution, this tool offe
 ## Usage
 
 ```
-Usage: pdftrim <input[.pdf]> [output file]
+Usage: pdftrim [OPTIONS] <input[.pdf]> [output file]
 
 Arguments:
   <input[.pdf]>
@@ -27,6 +27,11 @@ Arguments:
           If not specified, the input file name is used with `-crop.pdf` appended. Existing files will be overwritten.
 
 Options:
+      --gscmd <command>
+          The Ghostscript command to use.
+          
+          If not specified, the tool will search for Ghostscript in the system.
+
   -h, --help
           Print help (see a summary with '-h')
 
