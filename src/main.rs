@@ -40,38 +40,12 @@ fn main() {
     let bboxes = compute_bounding_boxes(&input_path, gs_cmd);
     debug!("Computed bounding boxes for all {} pages", bboxes.len());
 
-    let mut doc = Document::load(&input_path).expect("Failed to load the PDF");
-    debug!("Loaded input file");
-
-    let page_ids = doc.page_iter().collect::<Vec<_>>();
-    assert_eq!(
-        page_ids.len(),
-        bboxes.len(),
-        "Mismatch between the number of pages and bounding boxes"
-    );
-
-    for (id, bbox) in page_ids.iter().zip(bboxes.iter()) {
-        let page = doc
-            .objects
-            .get_mut(id)
-            .unwrap()
-            .as_dict_mut()
-            .expect("Failed to parse PDF: page is not a dictionary");
-
-        page.set(
-            "CropBox",
-            bbox.iter().map(|&x| x.into()).collect::<Vec<_>>(),
-        );
-    }
-    debug!("Updated CropBox for all pages");
-
-    doc.save(&output_path)
-        .expect("Failed to save the modified PDF");
+    crop_pdf(&input_path, &output_path, &bboxes);
 
     println!(
         "==> {} page{} written on `{}'.",
-        page_ids.len(),
-        if page_ids.len() == 1 { "" } else { "s" },
+        bboxes.len(),
+        if bboxes.len() == 1 { "" } else { "s" },
         &output_path
     );
 }
@@ -170,4 +144,34 @@ fn compute_bounding_boxes(pdf_file: &str, gs_cmd: &str) -> Vec<[f64; 4]> {
         );
         hires_bboxes
     }
+}
+
+fn crop_pdf(input_path: &str, output_path: &str, crop_boxes: &[[f64; 4]]) {
+    let mut doc = Document::load(input_path).expect("Failed to load the PDF");
+    debug!("Loaded input file");
+
+    let page_ids = doc.page_iter().collect::<Vec<_>>();
+    assert_eq!(
+        page_ids.len(),
+        crop_boxes.len(),
+        "Page count mismatch between Ghostscript and the PDF parser"
+    );
+
+    for (id, crop_box) in page_ids.iter().zip(crop_boxes.iter()) {
+        let page = doc
+            .objects
+            .get_mut(id)
+            .unwrap()
+            .as_dict_mut()
+            .expect("Failed to parse PDF: page is not a dictionary");
+
+        page.set(
+            "CropBox",
+            crop_box.iter().map(|&x| x.into()).collect::<Vec<_>>(),
+        );
+    }
+    debug!("Updated CropBox for all pages");
+
+    doc.save(output_path)
+        .expect("Failed to save the modified PDF");
 }
