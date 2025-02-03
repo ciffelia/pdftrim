@@ -99,6 +99,7 @@ fn compute_bounding_boxes(pdf_file: &str, gs_cmd: &str) -> Vec<[f64; 4]> {
         .stdout(Stdio::null())
         .spawn()
         .expect("Failed to execute Ghostscript");
+    debug!("Started Ghostscript");
 
     let stderr = BufReader::new(child.stderr.take().unwrap());
 
