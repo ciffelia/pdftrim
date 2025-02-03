@@ -57,6 +57,8 @@ jobs:
           rustup override set "$RUST_TOOLCHAIN"
 
       - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
 
       - uses: cargo-bins/cargo-binstall@main
 
