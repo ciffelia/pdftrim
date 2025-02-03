@@ -50,7 +50,10 @@ fn main() {
     );
 }
 
-/// Removes white margins from PDF files.
+/// Removes white margins from PDF files without inflating file sizes.
+///
+/// pdfcrop is a tool to trim white margins from PDF files. It is designed to
+/// be fast and efficient, producing minimal output file sizes.
 ///
 /// This tool uses Ghostscript to calculate the bounding boxes for each page in
 /// the input PDF file. It then generates an output PDF file with updated
@@ -63,6 +66,10 @@ fn main() {
 /// results in significantly larger files. In contrast, this tool directly
 /// modifies the PDF dimension data, avoiding file size inflation.
 #[derive(clap::Parser)]
+#[command(
+    after_help = "Verbose output can be enabled by setting the `RUST_LOG` environment variable to \
+                  `debug`."
+)]
 struct Args {
     /// The input PDF file to crop.
     ///
