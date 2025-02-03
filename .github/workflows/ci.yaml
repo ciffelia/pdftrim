@@ -53,7 +53,7 @@ jobs:
       - name: Setup Rust
         run: |
           rustup set profile minimal
-          rustup toolchain install "$RUST_TOOLCHAIN" --component clippy
+          rustup toolchain install "$RUST_TOOLCHAIN" --component clippy --target ${{ matrix.target }}
           rustup override set "$RUST_TOOLCHAIN"
 
       - uses: Swatinem/rust-cache@v2
