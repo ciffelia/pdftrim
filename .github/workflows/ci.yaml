@@ -69,7 +69,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: pdftrim-${{ matrix.target }}
-          path: target/release/pdftrim
+          path: target/${{ matrix.target }}/release/pdftrim
           if-no-files-found: error
 
   rustfmt:
