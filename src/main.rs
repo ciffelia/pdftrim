@@ -67,8 +67,8 @@ fn main() {
 /// modifies the PDF dimension data, avoiding file size inflation.
 #[derive(clap::Parser)]
 #[command(
-    after_help = "Verbose output can be enabled by setting the `RUST_LOG` environment variable to \
-                  `debug`."
+    after_long_help = "Verbose output can be enabled by setting the `RUST_LOG` environment \
+                       variable to `debug`."
 )]
 struct Args {
     /// The input PDF file to crop.
