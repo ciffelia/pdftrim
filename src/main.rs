@@ -52,7 +52,7 @@ fn main() {
 
 /// Removes white margins from PDF files without inflating file sizes.
 ///
-/// pdfcrop is a tool to trim white margins from PDF files. It is designed to
+/// pdftrim is a tool to trim white margins from PDF files. It is designed to
 /// be fast and efficient, producing minimal output file sizes.
 ///
 /// This tool uses Ghostscript to calculate the bounding boxes for each page in
