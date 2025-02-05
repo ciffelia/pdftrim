@@ -3,7 +3,7 @@ use std::{
     process::{Command, Stdio},
 };
 
-use clap::Parser;
+use clap::{CommandFactory, Parser};
 use log::debug;
 use lopdf::Document;
 use regex::Regex;
@@ -12,18 +12,28 @@ fn main() {
     env_logger::init();
 
     let args = Args::parse();
+    if let Some(shell) = args.generate_completion {
+        eprintln!("Generating completion file for {shell}...");
+
+        let mut cmd = Args::command();
+        let name = cmd.get_name().to_string();
+        clap_complete::generate(shell, &mut cmd, name, &mut std::io::stdout());
+
+        return;
+    }
 
     let gs_cmd = args.gscmd.as_deref().unwrap_or_else(|| find_ghostscript());
     debug!("Using Ghostscript command: {}", gs_cmd);
 
-    let input_path = if std::fs::metadata(&args.input).is_ok() {
-        args.input
+    let input_path = args.input.unwrap(); // input is required unless `--generate-completion` is present
+    let input_path = if std::fs::metadata(&input_path).is_ok() {
+        input_path
     } else {
-        let with_extension = args.input.clone() + ".pdf";
+        let with_extension = input_path.clone() + ".pdf";
         if std::fs::metadata(&with_extension).is_ok() {
             with_extension
         } else {
-            panic!("Input file `{}' not found", args.input);
+            panic!("Input file `{}' not found", input_path);
         }
     };
     debug!("Input file: {}", input_path);
@@ -74,21 +84,25 @@ struct Args {
     /// The input PDF file to crop.
     ///
     /// The `.pdf` extension is optional.
-    #[arg(value_name = "input[.pdf]")]
-    input: String,
+    #[arg(value_name = "input[.pdf]", value_hint = clap::ValueHint::FilePath, required_unless_present = "generate_completion")]
+    input: Option<String>,
 
     /// The output PDF file to write.
     ///
     /// If not specified, the input file name is used with `-crop.pdf` appended.
     /// Existing files will be overwritten.
-    #[arg(value_name = "output file")]
+    #[arg(value_name = "output file", value_hint = clap::ValueHint::FilePath)]
     output: Option<String>,
 
     /// The Ghostscript command to use.
     ///
-    /// If not specified, the tool will search for Ghostscript in the system.
-    #[arg(long, value_name = "command")]
+    /// If not specified, it will search for Ghostscript in the system.
+    #[arg(long, value_name = "command", value_hint = clap::ValueHint::CommandName)]
     gscmd: Option<String>,
+
+    /// If provided, outputs the completion file for given shell and exits.
+    #[arg(long, value_enum, exclusive = true)]
+    generate_completion: Option<clap_complete::Shell>,
 }
 
 fn find_ghostscript() -> &'static str {

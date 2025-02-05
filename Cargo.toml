@@ -6,6 +6,7 @@ publish = false
 
 [dependencies]
 clap = { version = "4.5.27", features = ["derive"] }
+clap_complete = "4.5.44"
 env_logger = "0.11.6"
 log = "0.4.25"
 lopdf = "0.35.0"
