@@ -15,14 +15,21 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build-linux:
+  build:
     strategy:
       fail-fast: false
       matrix:
-        target:
-          - x86_64-unknown-linux-gnu
-          - x86_64-unknown-linux-musl
-    runs-on: ubuntu-24.04
+        include:
+          - target: x86_64-unknown-linux-gnu
+            runs-on: ubuntu-24.04
+          - target: x86_64-unknown-linux-musl
+            runs-on: ubuntu-24.04
+          - target: aarch64-apple-darwin
+            runs-on: macos-14
+          - target: x86_64-apple-darwin
+            runs-on: macos-14
+    name: build (${{ matrix.target }})
+    runs-on: ${{ matrix.runs-on }}
     steps:
       - uses: actions/checkout@v4
 
@@ -74,36 +81,6 @@ jobs:
 
       - name: cross build
         run: cross build --all-targets --release --target ${{ matrix.target }}
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: pdftrim-${{ matrix.target }}
-          path: target/${{ matrix.target }}/release/pdftrim
-          if-no-files-found: error
-
-  build-macos:
-    strategy:
-      fail-fast: false
-      matrix:
-        target:
-          - aarch64-apple-darwin
-          - x86_64-apple-darwin
-    runs-on: macos-14
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Rust
-        run: |
-          rustup set profile minimal
-          rustup toolchain install "$RUST_TOOLCHAIN" --target ${{ matrix.target }}
-          rustup override set "$RUST_TOOLCHAIN"
-
-      - uses: Swatinem/rust-cache@v2
-        with:
-          key: ${{ matrix.target }}
-
-      - name: cargo build
-        run: cargo build --all-targets --release --target ${{ matrix.target }}
 
       - uses: actions/upload-artifact@v4
         with:
