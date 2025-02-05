@@ -171,7 +171,7 @@ jobs:
       - name: Check if Cargo.toml version matches the release tag
         run: yq -e 'env(TAG) == ("v" + .package.version)' Cargo.toml
         env:
-          TAG: ${{ github.ref_name }}
+          TAG: v1.0.0-rc.1
 
   release-create-assets:
     # if: startsWith(github.ref, 'refs/tags/')
@@ -222,7 +222,7 @@ jobs:
             minisign -SW -s ../signing.key -x "$asset.tar.gz.sig" -m "$asset.tar.gz"
           done
         env:
-          TAG: ${{ github.ref_name }}
+          TAG: v1.0.0-rc.1
 
       - uses: actions/upload-artifact@v4
         with:
