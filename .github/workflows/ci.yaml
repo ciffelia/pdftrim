@@ -173,19 +173,37 @@ jobs:
       - build-windows
     runs-on: ubuntu-24.04
     permissions: {}
+    outputs:
+      signing-pubkey: ${{ steps.create-keypair.outputs.pubkey }}
     steps:
+      - name: Setup minisign
+        run: |
+          mkdir minisign
+          curl -fsSL https://github.com/jedisct1/minisign/releases/download/0.12/minisign-0.12-linux.tar.gz | tar -xzC minisign
+          echo "$(pwd)/minisign/minisign-linux/x86_64" >> "$GITHUB_PATH"
+
+      - name: Create a key pair
+        id: create-keypair
+        run: |
+          minisign -GW -p signing.pub -s signing.key
+          echo "pubkey=$(<signing.pub)" >> "$GITHUB_OUTPUT"
+
       - uses: actions/download-artifact@v4
         with:
           name: pdftrim-*
+          path: artifacts
 
       - name: Create release assets
         run: |
-          for artifact in pdftrim-*; do
+          cd artifacts
+          for artifact in *; do
             target="${artifact#pdftrim-}"
-            name="pdftrim-$TAG-$target"
+            asset="pdftrim-$TAG-$target"
 
-            mv "$artifact" "$name"
-            tar -czf "$name.tar.gz" "$name"
+            mv "$artifact" "$asset"
+            tar -czf "$asset.tar.gz" "$asset"
+            rm -rf "$asset"
+            minisign -SW -s ../signing.key -x "$asset.tar.gz.sig" -m "$asset.tar.gz"
           done
         env:
           TAG: ${{ github.ref_name }}
@@ -193,7 +211,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: release-assets
-          path: pdftrim-*.tar.gz
+          path: artifacts/*
           if-no-files-found: error
           compression-level: 0
 
@@ -208,10 +226,11 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: release-assets
+          path: release-assets
 
       - name: Upload release assets
         run: |
-          gh release upload "$TAG" pdftrim-*.tar.gz
+          gh release upload "$TAG" release-assets/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ github.ref_name }}
@@ -219,6 +238,7 @@ jobs:
   release-crates-io:
     if: startsWith(github.ref, 'refs/tags/')
     needs:
+      - release-create-assets
       - release-upload-assets
     runs-on: ubuntu-24.04
     steps:
@@ -229,6 +249,16 @@ jobs:
           rustup set profile minimal
           rustup toolchain install "$RUST_TOOLCHAIN"
           rustup override set "$RUST_TOOLCHAIN"
+
+      - name: Set binstall signing metadata
+        run: |
+          cat >> Cargo.toml <<EOF
+          [package.metadata.binstall.signing]
+          algorithm = "minisign"
+          pubkey = "$PUBKEY"
+          EOF
+        env:
+          PUBKEY: ${{ needs.release-create-assets.outputs.signing-pubkey }}
 
       - run: cargo publish
         env:
