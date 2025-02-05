@@ -13,10 +13,10 @@ While similar to the pdfcrop script in the TeX Live distribution, this tool offe
 ## Usage
 
 ```
-Usage: pdftrim [OPTIONS] <input[.pdf]> [output file]
+Usage: pdftrim [OPTIONS] [input[.pdf]] [output file]
 
 Arguments:
-  <input[.pdf]>
+  [input[.pdf]]
           The input PDF file to crop.
           
           The `.pdf` extension is optional.
@@ -30,7 +30,12 @@ Options:
       --gscmd <command>
           The Ghostscript command to use.
           
-          If not specified, the tool will search for Ghostscript in the system.
+          If not specified, it will search for Ghostscript in the system.
+
+      --generate-completion <GENERATE_COMPLETION>
+          If provided, outputs the completion file for given shell and exits
+          
+          [possible values: bash, elvish, fish, powershell, zsh]
 
   -h, --help
           Print help (see a summary with '-h')
