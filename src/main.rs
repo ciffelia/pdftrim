@@ -152,9 +152,10 @@ fn compute_bounding_boxes(pdf_file: &str, gs_cmd: &str) -> Vec<[f64; 4]> {
     let mut bboxes = Vec::new();
     let mut hires_bboxes = Vec::new();
 
-    let re =
-        Regex::new(r"^%%(HiRes)?BoundingBox:\s*(-?[\.\d]+) (-?[\.\d]+) (-?[\.\d]+) (-?[\.\d]+)")
-            .unwrap();
+    let re = Regex::new(
+        r"(?-u)^%%(HiRes)?BoundingBox:\s*(-?[\.\d]+) (-?[\.\d]+) (-?[\.\d]+) (-?[\.\d]+)",
+    )
+    .unwrap();
 
     for line in stderr.lines() {
         let line = line.expect("Failed to read output from Ghostscript");
