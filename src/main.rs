@@ -22,7 +22,11 @@ fn main() {
         return;
     }
 
-    let gs_cmd = args.gscmd.as_deref().unwrap_or_else(|| find_ghostscript());
+    let gs_cmd = args
+        .gscmd
+        .as_deref()
+        .or_else(|| find_ghostscript())
+        .expect("Ghostscript not found in the system");
     debug!("Using Ghostscript command: {}", gs_cmd);
 
     let input_path = args.input.unwrap(); // input is required unless `--generate-completion` is present
@@ -105,7 +109,7 @@ struct Args {
     generate_completion: Option<clap_complete::Shell>,
 }
 
-fn find_ghostscript() -> &'static str {
+fn find_ghostscript() -> Option<&'static str> {
     let candidates: &[&str] = if cfg!(windows) {
         &["gswin64c", "gswin32c", "gs"]
     } else {
@@ -120,12 +124,12 @@ fn find_ghostscript() -> &'static str {
             .status();
         if let Ok(status) = result {
             if status.success() {
-                return candidate;
+                return Some(candidate);
             }
         }
     }
 
-    "gs"
+    None
 }
 
 fn compute_bounding_boxes(pdf_file: &str, gs_cmd: &str) -> Vec<[f64; 4]> {
