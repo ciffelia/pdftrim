@@ -15,6 +15,50 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  rustfmt:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        run: |
+          rustup set profile minimal
+          rustup toolchain install "$RUST_TOOLCHAIN_RUSTFMT" --component rustfmt
+          rustup override set "$RUST_TOOLCHAIN_RUSTFMT"
+
+      - name: cargo fmt
+        run: cargo fmt --all -- --check
+
+  clippy:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        run: |
+          rustup set profile minimal
+          rustup toolchain install "$RUST_TOOLCHAIN" --component clippy
+          rustup override set "$RUST_TOOLCHAIN"
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: cargo clippy
+        run: cargo clippy --all-targets -- -D warnings
+
+  lockfile:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        run: |
+          rustup set profile minimal
+          rustup toolchain install "$RUST_TOOLCHAIN"
+          rustup override set "$RUST_TOOLCHAIN"
+
+      - name: Check if Cargo.lock is up-to-date
+        run: cargo tree --depth 1 --no-dedupe --locked
+
   build:
     strategy:
       fail-fast: false
@@ -116,47 +160,3 @@ jobs:
           name: pdftrim-${{ matrix.target }}
           path: target/${{ matrix.target }}/release/pdftrim.exe
           if-no-files-found: error
-
-  rustfmt:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Rust
-        run: |
-          rustup set profile minimal
-          rustup toolchain install "$RUST_TOOLCHAIN_RUSTFMT" --component rustfmt
-          rustup override set "$RUST_TOOLCHAIN_RUSTFMT"
-
-      - name: cargo fmt
-        run: cargo fmt --all -- --check
-
-  clippy:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Rust
-        run: |
-          rustup set profile minimal
-          rustup toolchain install "$RUST_TOOLCHAIN" --component clippy
-          rustup override set "$RUST_TOOLCHAIN"
-
-      - uses: Swatinem/rust-cache@v2
-
-      - name: cargo clippy
-        run: cargo clippy --all-targets -- -D warnings
-
-  lockfile:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Rust
-        run: |
-          rustup set profile minimal
-          rustup toolchain install "$RUST_TOOLCHAIN"
-          rustup override set "$RUST_TOOLCHAIN"
-
-      - name: Check if Cargo.lock is up-to-date
-        run: cargo tree --depth 1 --no-dedupe --locked
