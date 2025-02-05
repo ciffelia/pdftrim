@@ -206,7 +206,7 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: pdftrim-*
+          pattern: pdftrim-*
           path: artifacts
 
       - name: Create release assets
