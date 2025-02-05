@@ -186,7 +186,7 @@ jobs:
     runs-on: ubuntu-24.04
     permissions: {}
     outputs:
-      signing-pubkey: ${{ steps.create-keypair.outputs.pubkey }}
+      signing-pubkey: ${{ steps.export-pubkey.outputs.result }}
     steps:
       - name: Setup minisign
         run: |
@@ -195,10 +195,14 @@ jobs:
           echo "$(pwd)/minisign/minisign-linux/x86_64" >> "$GITHUB_PATH"
 
       - name: Create a key pair
-        id: create-keypair
-        run: |
-          minisign -GW -p signing.pub -s signing.key
-          echo "pubkey=$(<signing.pub)" >> "$GITHUB_OUTPUT"
+        run: minisign -GW -p signing.pub -s signing.key
+
+      - name: Export the public key
+        uses: actions/github-script@v6
+        id: export-pubkey
+        with:
+          script: |
+            return require('fs').readFileSync('signing.pub', 'utf8')
 
       - uses: actions/download-artifact@v4
         with:
