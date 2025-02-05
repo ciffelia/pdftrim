@@ -268,11 +268,11 @@ jobs:
           cat >> Cargo.toml <<EOF
           [package.metadata.binstall.signing]
           algorithm = "minisign"
-          pubkey = "$PUBKEY"
+          pubkey = $QUOTED_PUBKEY
           EOF
         env:
-          PUBKEY: ${{ needs.release-create-assets.outputs.signing-pubkey }}
+          QUOTED_PUBKEY: ${{ toJSON(needs.release-create-assets.outputs.signing-pubkey) }}
 
-      - run: cargo publish
+      - run: cargo publish --allow-dirty
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
