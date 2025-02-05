@@ -249,6 +249,7 @@ jobs:
           gh release upload "$TAG" release-assets/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
           TAG: ${{ github.ref_name }}
 
   release-crates-io:
