@@ -77,6 +77,9 @@ Options:
   -h, --help
           Print help (see a summary with '-h')
 
+  -V, --version
+          Print version
+
 Verbose output can be enabled by setting the `RUST_LOG` environment variable to `debug`.
 ```
 
