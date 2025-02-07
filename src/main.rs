@@ -13,8 +13,6 @@ fn main() {
 
     let args = Args::parse();
     if let Some(shell) = args.generate_completion {
-        eprintln!("Generating completion file for {shell}...");
-
         let mut cmd = Args::command();
         let name = cmd.get_name().to_string();
         clap_complete::generate(shell, &mut cmd, name, &mut std::io::stdout());
