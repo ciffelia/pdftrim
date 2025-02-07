@@ -6,7 +6,7 @@ use std::{
 use clap::{CommandFactory, Parser};
 use log::debug;
 use lopdf::Document;
-use regex::Regex;
+use regex_lite::Regex;
 
 fn main() {
     env_logger::init();
