@@ -150,8 +150,30 @@ fn compute_bounding_boxes(pdf_file: &str, gs_cmd: &str) -> Vec<[f64; 4]> {
         .expect("Failed to execute Ghostscript");
     debug!("Started Ghostscript");
 
-    let stderr = BufReader::new(child.stderr.take().unwrap());
+    let stderr_reader = BufReader::new(child.stderr.take().unwrap());
+    let (bboxes, hires_bboxes) = parse_ghostscript_output(stderr_reader);
 
+    let status = child.wait().unwrap();
+    if !status.success() {
+        panic!("Failed to execute Ghostscript: {}", status);
+    }
+
+    if bboxes.is_empty() {
+        panic!("No bounding boxes were found in the PDF");
+    }
+    if hires_bboxes.is_empty() {
+        bboxes
+    } else {
+        assert_eq!(
+            bboxes.len(),
+            hires_bboxes.len(),
+            "Mismatch between the number of BoundingBox and HiResBoundingBox"
+        );
+        hires_bboxes
+    }
+}
+
+fn parse_ghostscript_output(stderr: impl BufRead) -> (Vec<[f64; 4]>, Vec<[f64; 4]>) {
     let mut bboxes = Vec::new();
     let mut hires_bboxes = Vec::new();
 
@@ -177,24 +199,7 @@ fn compute_bounding_boxes(pdf_file: &str, gs_cmd: &str) -> Vec<[f64; 4]> {
         }
     }
 
-    let status = child.wait().unwrap();
-    if !status.success() {
-        panic!("Failed to execute Ghostscript: {}", status);
-    }
-
-    if bboxes.is_empty() {
-        panic!("No bounding boxes were found in the PDF");
-    }
-    if hires_bboxes.is_empty() {
-        bboxes
-    } else {
-        assert_eq!(
-            bboxes.len(),
-            hires_bboxes.len(),
-            "Mismatch between the number of BoundingBox and HiResBoundingBox"
-        );
-        hires_bboxes
-    }
+    (bboxes, hires_bboxes)
 }
 
 fn crop_pdf(input_path: &str, output_path: &str, crop_boxes: &[[f64; 4]]) {
@@ -225,4 +230,79 @@ fn crop_pdf(input_path: &str, output_path: &str, crop_boxes: &[[f64; 4]]) {
 
     doc.save(output_path)
         .expect("Failed to save the modified PDF");
+}
+
+#[cfg(test)]
+mod tests {
+    use std::io::Cursor;
+
+    use super::*;
+
+    #[test]
+    fn test_parse_ghostscript_output_empty() {
+        let input = "";
+        let (bboxes, hires_bboxes) = parse_ghostscript_output(Cursor::new(input));
+        assert!(bboxes.is_empty());
+        assert!(hires_bboxes.is_empty());
+    }
+
+    #[test]
+    fn test_parse_ghostscript_output_single_bbox() {
+        let input = "%%BoundingBox: 10 20 30 40\n";
+        let (bboxes, hires_bboxes) = parse_ghostscript_output(Cursor::new(input));
+        assert_eq!(bboxes, vec![[10.0, 20.0, 30.0, 40.0]]);
+        assert!(hires_bboxes.is_empty());
+    }
+
+    #[test]
+    fn test_parse_ghostscript_output_single_hires_bbox() {
+        let input = "%%HiResBoundingBox: 10.5 20.5 30.5 40.5\n";
+        let (bboxes, hires_bboxes) = parse_ghostscript_output(Cursor::new(input));
+        assert!(bboxes.is_empty());
+        assert_eq!(hires_bboxes, vec![[10.5, 20.5, 30.5, 40.5]]);
+    }
+
+    #[test]
+    fn test_parse_ghostscript_output_multiple_mixed() {
+        let input = r#"Processing pages 1 through 2.
+Page 1
+%%BoundingBox: 133 179 478 678
+%%HiResBoundingBox: 133.919996 179.045995 477.395985 677.015979
+Page 2
+%%BoundingBox: 133 525 478 715
+%%HiResBoundingBox: 133.343996 525.869984 477.395985 714.023978
+"#;
+        let (bboxes, hires_bboxes) = parse_ghostscript_output(Cursor::new(input));
+        assert_eq!(
+            bboxes,
+            vec![[133.0, 179.0, 478.0, 678.0], [133.0, 525.0, 478.0, 715.0]]
+        );
+        assert_eq!(
+            hires_bboxes,
+            vec![
+                [133.919996, 179.045995, 477.395985, 677.015979],
+                [133.343996, 525.869984, 477.395985, 714.023978]
+            ]
+        );
+    }
+
+    #[test]
+    fn test_parse_ghostscript_output_actual() {
+        let input = r#"GPL Ghostscript 9.55.0 (2021-09-27)
+Copyright (C) 2021 Artifex Software, Inc.  All rights reserved.
+This software is supplied under the GNU AGPLv3 and comes with NO WARRANTY:
+see the file COPYING for details.
+Processing pages 1 through 1.
+Page 1
+Loading NimbusSans-Regular font from /usr/share/ghostscript/9.55.0/Resource/Font/NimbusSans-Regular... 4469404 2930106 4289320 2951995 5 done.
+%%BoundingBox: 101 99 401 376
+%%HiResBoundingBox: 101.999528 99.449997 400.508988 375.515989
+"#;
+        let (bboxes, hires_bboxes) = parse_ghostscript_output(Cursor::new(input));
+        assert_eq!(bboxes, vec![[101.0, 99.0, 401.0, 376.0]]);
+        assert_eq!(
+            hires_bboxes,
+            vec![[101.999528, 99.449997, 400.508988, 375.515989],]
+        );
+    }
 }
