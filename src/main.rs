@@ -7,7 +7,6 @@ use std::{
 
 use clap::{CommandFactory, Parser};
 use log::debug;
-use lopdf::Document;
 use regex_lite::Regex;
 
 fn main() {
@@ -159,7 +158,7 @@ fn parse_ghostscript_output(stderr: impl BufRead) -> (Vec<[f64; 4]>, Vec<[f64; 4
 }
 
 fn crop_pdf(input_path: &str, output_path: &str, crop_boxes: &[[f64; 4]]) {
-    let mut doc = Document::load(input_path).expect("Failed to load the PDF");
+    let mut doc = lopdf::Document::load(input_path).expect("Failed to load the PDF");
     debug!("Loaded input file");
 
     let page_ids = doc.page_iter().collect::<Vec<_>>();
