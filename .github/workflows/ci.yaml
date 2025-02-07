@@ -59,6 +59,11 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
+      - name: Install Ghostscript
+        run: |
+          sudo apt-get update
+          sudo apt-get install ghostscript
+
       - name: cargo test
         run: cargo test --no-fail-fast
 
