@@ -40,6 +40,6 @@ pub struct Cli {
     pub gscmd: Option<String>,
 
     /// If provided, outputs the completion file for given shell and exits.
-    #[arg(long, value_enum, exclusive = true)]
+    #[arg(long, value_name = "shell", value_enum, exclusive = true)]
     pub generate_completion: Option<clap_complete::Shell>,
 }
