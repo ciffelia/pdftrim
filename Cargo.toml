@@ -1,6 +1,6 @@
 [package]
 name = "pdftrim"
-version = "1.0.1"
+version = "1.0.2"
 edition = "2021"
 description = "Removes white margins from PDF files without inflating file sizes"
 repository = "https://github.com/ciffelia/pdftrim"
