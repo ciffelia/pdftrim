@@ -69,7 +69,7 @@ Options:
           
           If not specified, it will search for Ghostscript in the system.
 
-      --generate-completion <GENERATE_COMPLETION>
+      --generate-completion <shell>
           If provided, outputs the completion file for given shell and exits
           
           [possible values: bash, elvish, fish, powershell, zsh]
