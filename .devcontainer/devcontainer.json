@@ -1,0 +1,11 @@
+{
+  "name": "pdftrim",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "containerEnv": {
+    // Persist bash history
+    "PROMPT_COMMAND": "history -a",
+    "HISTFILE": "${containerWorkspaceFolder}/.devcontainer/persist/.bash_history"
+  }
+}
