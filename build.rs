@@ -1,6 +1,6 @@
 use std::{fs, io, path::PathBuf};
 
-use clap::CommandFactory;
+use clap::{CommandFactory, ValueEnum};
 use clap_complete::Shell;
 
 include!("src/cli.rs");
@@ -12,13 +12,7 @@ fn main() -> Result<(), io::Error> {
 
     let mut cmd = Cli::command();
 
-    for shell in [
-        Shell::Bash,
-        Shell::Elvish,
-        Shell::Fish,
-        Shell::PowerShell,
-        Shell::Zsh,
-    ] {
+    for &shell in Shell::value_variants() {
         let completion_file = completions_dir.join(shell.to_string());
         let mut buf = io::BufWriter::new(fs::File::create(&completion_file)?);
 
