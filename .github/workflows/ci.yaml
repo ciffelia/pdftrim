@@ -277,6 +277,10 @@ jobs:
       - release-create-assets
       - release-upload-assets
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
+    environment: release
     steps:
       - uses: actions/checkout@v5
 
@@ -296,6 +300,9 @@ jobs:
         env:
           QUOTED_PUBKEY: ${{ toJSON(needs.release-create-assets.outputs.signing-pubkey) }}
 
+      - uses: rust-lang/crates-io-auth-action@v1
+        id: auth
+
       - run: cargo publish --allow-dirty
         env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
