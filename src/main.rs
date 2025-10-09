@@ -15,11 +15,19 @@ fn main() {
     let args = cli::Cli::parse();
     if let Some(shell) = args.generate_completion {
         let completion = match shell {
-            clap_complete::Shell::Bash => include_str!("completion/bash"),
-            clap_complete::Shell::Elvish => include_str!("completion/elvish"),
-            clap_complete::Shell::Fish => include_str!("completion/fish"),
-            clap_complete::Shell::PowerShell => include_str!("completion/powershell"),
-            clap_complete::Shell::Zsh => include_str!("completion/zsh"),
+            clap_complete::Shell::Bash => {
+                include_str!(concat!(env!("OUT_DIR"), "/completions/bash"))
+            }
+            clap_complete::Shell::Elvish => {
+                include_str!(concat!(env!("OUT_DIR"), "/completions/elvish"))
+            }
+            clap_complete::Shell::Fish => {
+                include_str!(concat!(env!("OUT_DIR"), "/completions/fish"))
+            }
+            clap_complete::Shell::PowerShell => {
+                include_str!(concat!(env!("OUT_DIR"), "/completions/powershell"))
+            }
+            clap_complete::Shell::Zsh => include_str!(concat!(env!("OUT_DIR"), "/completions/zsh")),
             _ => unimplemented!(),
         };
         println!("{}", completion);
