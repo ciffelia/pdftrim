@@ -89,9 +89,9 @@ jobs:
           - target: x86_64-unknown-linux-musl
             runs-on: ubuntu-24.04
           - target: aarch64-apple-darwin
-            runs-on: macos-14
+            runs-on: macos-15
           - target: x86_64-apple-darwin
-            runs-on: macos-14
+            runs-on: macos-15
     name: build (${{ matrix.target }})
     runs-on: ${{ matrix.runs-on }}
     steps:
