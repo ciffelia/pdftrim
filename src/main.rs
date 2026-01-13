@@ -5,7 +5,7 @@ use std::{
     process::{Command, Stdio},
 };
 
-use clap::{CommandFactory, Parser};
+use clap::Parser;
 use log::debug;
 use regex_lite::Regex;
 
@@ -14,9 +14,23 @@ fn main() {
 
     let args = cli::Cli::parse();
     if let Some(shell) = args.generate_completion {
-        let mut cmd = cli::Cli::command();
-        let name = cmd.get_name().to_string();
-        clap_complete::generate(shell, &mut cmd, name, &mut std::io::stdout());
+        let completion = match shell {
+            clap_complete::Shell::Bash => {
+                include_str!(concat!(env!("OUT_DIR"), "/completions/bash"))
+            }
+            clap_complete::Shell::Elvish => {
+                include_str!(concat!(env!("OUT_DIR"), "/completions/elvish"))
+            }
+            clap_complete::Shell::Fish => {
+                include_str!(concat!(env!("OUT_DIR"), "/completions/fish"))
+            }
+            clap_complete::Shell::PowerShell => {
+                include_str!(concat!(env!("OUT_DIR"), "/completions/powershell"))
+            }
+            clap_complete::Shell::Zsh => include_str!(concat!(env!("OUT_DIR"), "/completions/zsh")),
+            _ => unimplemented!(),
+        };
+        println!("{}", completion);
 
         return;
     }
